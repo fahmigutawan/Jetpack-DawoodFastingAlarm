@@ -4,7 +4,9 @@ import android.content.Context
 import android.media.AudioManager
 import android.media.RingtoneManager
 import android.net.Uri
+import android.util.Log
 import com.frgutawan.dawoodfastingalarm.alarmMediaPlayer
+import java.util.logging.Handler
 
 fun playAlarmSound(context: Context, uri: Uri? = null) {
     try {
@@ -22,6 +24,8 @@ fun playAlarmSound(context: Context, uri: Uri? = null) {
             isLooping = true
             start()
         }
+
+        android.os.Handler().postDelayed({ alarmMediaPlayer.stop() }, 5000)
     }
 }
 
