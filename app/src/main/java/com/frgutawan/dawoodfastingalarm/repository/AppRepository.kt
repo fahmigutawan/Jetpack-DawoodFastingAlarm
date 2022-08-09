@@ -1,6 +1,6 @@
 package com.frgutawan.dawoodfastingalarm.repository
 
-import android.net.Uri
+import android.content.Context
 import com.frgutawan.dawoodfastingalarm.data.alarm.AlarmDataSource
 import com.frgutawan.dawoodfastingalarm.data.datastore.AppDataStore
 import javax.inject.Inject
@@ -9,7 +9,7 @@ import javax.inject.Singleton
 @Singleton
 class AppRepository @Inject constructor(
     private val dataStore: AppDataStore,
-    private val alarmDataSource: AlarmDataSource
+    private val alarmDataSource: AlarmDataSource,
     ) {
 
     // Save language into datastore
@@ -30,5 +30,15 @@ class AppRepository @Inject constructor(
     // Get isDawoodFastingReminderActive from datastore
     fun getIsDawoodFastingReminderActive() = dataStore.isDawoodFastingReminderActive
 
-    fun test() = alarmDataSource.test()
+    // Save DawoodFastingAlarmClock into datastore
+    suspend fun saveDawoodFastingAlarmClock(hour:String, minute:String) = dataStore.saveDawoodAlarmClock(hour, minute)
+
+    // Get DawoodFastingAlarmClock from datastore
+    fun getDawoodFastingAlarmClock() = dataStore.dawoodAlarmClock
+
+    // Set Dawod Fasting Alarm
+    fun setDawoodFastingAlarm(hour:Int, minute:Int, context: Context) = alarmDataSource.setDawoodAlarm(hour, minute, context)
+
+    // Cancel Dawood Fasting Alarm
+    fun cancelDawoodFastingAlarm(context: Context) = alarmDataSource.cancelDawoodAlarm(context)
 }

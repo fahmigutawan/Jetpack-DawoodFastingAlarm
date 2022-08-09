@@ -1,7 +1,6 @@
 package com.frgutawan.dawoodfastingalarm.di
 
 import android.content.Context
-import android.icu.util.Calendar
 import android.media.MediaPlayer
 import com.frgutawan.dawoodfastingalarm.data.alarm.AlarmDataSource
 import com.frgutawan.dawoodfastingalarm.data.datastore.AppDataStore
@@ -22,19 +21,11 @@ object RepositoryModule {
 
     @Provides
     @Singleton
-    fun provideCalendar() = Calendar.getInstance()
+    fun provideAlarmDataSource() = AlarmDataSource()
 
     @Provides
     @Singleton
     fun provideMediaPlayer() = MediaPlayer()
-
-    @Provides
-    @Singleton
-    fun provideAlarmDataSource(
-        @ApplicationContext context: Context,
-        calendar: Calendar,
-        mediaPlayer: MediaPlayer
-    ) = AlarmDataSource(context, calendar, mediaPlayer)
 
     @Provides
     @Singleton

@@ -1,30 +1,44 @@
 package com.frgutawan.dawoodfastingalarm.screen
 
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
+import android.app.TimePickerDialog
+import android.content.Intent
+import android.net.Uri
+import android.provider.Settings
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.material.Button
-import androidx.compose.material.Text
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.CornerSize
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import com.frgutawan.dawoodfastingalarm.R
+import com.frgutawan.dawoodfastingalarm.component.ButtonField
 import com.frgutawan.dawoodfastingalarm.component.ToggleSwitchField
 import com.frgutawan.dawoodfastingalarm.mainViewModel
-import com.frgutawan.dawoodfastingalarm.ui.theme.DarkGray
-import com.frgutawan.dawoodfastingalarm.ui.theme.LightGreen
-import com.frgutawan.dawoodfastingalarm.ui.theme.White
+import com.frgutawan.dawoodfastingalarm.ui.theme.*
+import com.frgutawan.dawoodfastingalarm.utils.DrawOverOtherApp
 import com.frgutawan.dawoodfastingalarm.viewmodel.DawoodFastingScreenViewModel
+import java.util.*
 
 @Composable
 fun DawoodFastingScreen(navController: NavController) {
@@ -33,14 +47,13 @@ fun DawoodFastingScreen(navController: NavController) {
 
     /**Content*/
     LazyColumn {
-        item {
-            TopBackground()
-        }
-
-        item {
-            BelowContent(viewModel)
-        }
+        item { TopBackground() }
+        item { BelowContent(navController, viewModel) }
     }
+
+    //Dialog
+    if (viewModel.showAboutStartNextAlarm.value) AboutStartFromNextAlarm(viewModel = viewModel)
+    if (viewModel.showCheckPermissionDialog) CheckForPermission(viewModel = viewModel)
 }
 
 @Composable
@@ -94,15 +107,17 @@ private fun TopBackground() {
 }
 
 @Composable
-private fun BelowContent(viewModel: DawoodFastingScreenViewModel) {
+private fun BelowContent(navController: NavController, viewModel: DawoodFastingScreenViewModel) {
     /**Attr*/
     val scrHeight =
         LocalConfiguration.current.screenHeightDp - mainViewModel.bottomAppBarPadding.value
     val topBgHeight = LocalConfiguration.current.screenHeightDp / 3.5
+    val context = LocalContext.current
 
     /**Function*/
     viewModel.getIsDawoodFastingAlarmActive()
     viewModel.getIsDawoodFastingReminderActive()
+    viewModel.getDawoodFastingAlarmClock()
 
     /**Content*/
     Box(
@@ -129,15 +144,225 @@ private fun BelowContent(viewModel: DawoodFastingScreenViewModel) {
                             color = LightGreen
                         )
                     },
-                    onCheckedChange = { viewModel.saveIsDawoodFastingAlarmActive() },
+                    onCheckedChange = {
+                        viewModel.saveIsDawoodFastingAlarmActive()
+                        when (it) {
+                            true -> {
+                                viewModel.setDawoodFastingAlarm(
+                                    Integer.parseInt(viewModel.dawoodFastingAlarmClockHour.value),
+                                    Integer.parseInt(viewModel.dawoodFastingAlarmClockMinute.value),
+                                    context
+                                )
+                            }
+                            else -> {
+                                viewModel.cancelDawoodFastingAlarm(context)
+                            }
+                        }
+                    },
                     checkedState = viewModel.isDawoodFastingAlarmActive
                 )
-                Button(onClick = { viewModel.test() }) {
-                    Text(text = "Click Here")
+
+                // Check if DrawOverOtherApp has granted
+                if (viewModel.isDawoodFastingAlarmActive.value) {
+                    DrawOverOtherApp(
+                        onGranted = {
+                            AnimatedVisibility(visible = viewModel.isDawoodFastingAlarmActive.value) {
+                                DawoodAlarmContent(
+                                    navController = navController,
+                                    viewModel = viewModel
+                                )
+                            }
+                        },
+                        onDenied = { viewModel.showCheckPermissionDialog = true },
+                        context = context
+                    )
                 }
             }
 
             /**[DawoodFastingReminder]*/
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 16.dp, start = 16.dp, end = 16.dp)
+            ) {
+                ToggleSwitchField(
+                    modifier = Modifier.fillMaxWidth(),
+                    arrangement = Arrangement.SpaceBetween,
+                    leadingContent = {
+                        Text(
+                            text = mainViewModel.language.dawoodFastingScreen.reminderDayBefore,
+                            fontFamily = FontFamily(Font(R.font.poppins_semibold)),
+                            fontSize = 14.sp,
+                            color = LightGreen
+                        )
+                    },
+                    onCheckedChange = { viewModel.saveIsDawoodFastingReminderActive() },
+                    checkedState = viewModel.isDawoodFastingReminderActive
+                )
+
+                AnimatedVisibility(visible = viewModel.isDawoodFastingReminderActive.value) {}
+            }
         }
     }
+}
+
+@Composable
+private fun DawoodAlarmContent(
+    navController: NavController,
+    viewModel: DawoodFastingScreenViewModel
+) {
+    Column {
+        Divider(modifier = Modifier.fillMaxWidth(), color = Gray, thickness = 2.dp)
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            val context = LocalContext.current
+            val timePicker = TimePickerDialog(
+                context,
+                { _, hour: Int, minute: Int ->
+                    if (hour < 10) viewModel.dawoodFastingAlarmClockHour.value = "0$hour"
+                    else viewModel.dawoodFastingAlarmClockHour.value = "$hour"
+
+                    if (minute < 10) viewModel.dawoodFastingAlarmClockMinute.value = "0$minute"
+                    else viewModel.dawoodFastingAlarmClockMinute.value = "$minute"
+
+                    viewModel.cancelDawoodFastingAlarm(context)
+                    viewModel.setDawoodFastingAlarm(hour, minute, context)
+                    viewModel.saveDawoodFastingAlarmClock()
+                },
+                Integer.parseInt(viewModel.dawoodFastingAlarmClockHour.value),
+                Integer.parseInt(viewModel.dawoodFastingAlarmClockMinute.value),
+                true
+            )
+            Text(
+                textAlign = TextAlign.Center,
+                modifier = Modifier.clickable(
+                    interactionSource = remember { MutableInteractionSource() },
+                    indication = rememberRipple(color = White),
+                    onClick = { timePicker.show() }),
+                text = "${viewModel.dawoodFastingAlarmClockHour.value}:${viewModel.dawoodFastingAlarmClockMinute.value}",
+                color = White,
+                fontSize = 48.sp,
+                fontFamily = FontFamily(Font(R.font.poppins_semibold))
+            )
+
+            IconButton(onClick = { /*TODO*/ }) {
+                Icon(
+                    imageVector = Icons.Default.Settings,
+                    contentDescription = "Setting",
+                    tint = LightGreen
+                )
+            }
+        }
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            ButtonField(onClick = {}) {
+                Text(
+                    text = mainViewModel.language.dawoodFastingScreen.startFromNextAlarm,
+                    color = Black,
+                    fontSize = 12.sp,
+                    fontFamily = FontFamily(Font(R.font.poppins_medium))
+                )
+            }
+
+            Spacer(modifier = Modifier.width(8.dp))
+
+            ButtonField(
+                onClick = { viewModel.showAboutStartNextAlarm.value = true },
+                shape = CircleShape
+            ) {
+                Text(
+                    text = "?",
+                    color = Black,
+                    fontSize = 12.sp,
+                    fontFamily = FontFamily(Font(R.font.poppins_medium))
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun AboutStartFromNextAlarm(viewModel: DawoodFastingScreenViewModel) {
+    AlertDialog(
+        onDismissRequest = { viewModel.showAboutStartNextAlarm.value = false },
+        text = {
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Text(
+                    text = mainViewModel.language.dawoodFastingScreen.aboutStartFromNextAlarm,
+                    color = Black,
+                    fontSize = 12.sp,
+                    fontFamily = FontFamily(Font(R.font.poppins_regular))
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                ButtonField(
+                    onClick = { viewModel.showAboutStartNextAlarm.value = false },
+                    color = DarkGray
+                ) {
+                    Text(
+                        text = mainViewModel.language.dawoodFastingScreen.aboutStartFromNextAlarmExit,
+                        color = White,
+                        fontSize = 12.sp,
+                        fontFamily = FontFamily(Font(R.font.poppins_medium))
+                    )
+                }
+            }
+        },
+        buttons = {},
+        backgroundColor = LightGray,
+        shape = RoundedCornerShape(CornerSize(4.dp))
+    )
+}
+
+@Composable
+private fun CheckForPermission(viewModel: DawoodFastingScreenViewModel) {
+    /**Attrs*/
+    val context = LocalContext.current
+
+    /**Function*/
+    viewModel.isDawoodFastingAlarmActive.value = false
+    viewModel.saveIsDawoodFastingAlarmActive()
+
+    /**Content*/
+    AlertDialog(
+        onDismissRequest = { viewModel.showCheckPermissionDialog = false },
+        text = {
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Text(
+                    text = "CHECK YOUR PERMISSION",
+                    color = Black,
+                    fontSize = 12.sp,
+                    fontFamily = FontFamily(Font(R.font.poppins_regular))
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+
+            }
+        },
+        buttons = {
+            Row(modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp), horizontalArrangement = Arrangement.Center) {
+                ButtonField(
+                    onClick = {
+                        val intent = Intent(
+                            Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
+                            Uri.parse("package:" + context.getPackageName())
+                        )
+
+                        context.startActivity(intent)
+                        viewModel.showCheckPermissionDialog = false
+                    },
+                    color = DarkGray
+                ) {
+                    Text(
+                        text = "Get Permission",
+                        color = White,
+                        fontSize = 12.sp,
+                        fontFamily = FontFamily(Font(R.font.poppins_medium))
+                    )
+                }
+            }
+        },
+        backgroundColor = LightGray,
+        shape = RoundedCornerShape(CornerSize(4.dp))
+    )
 }

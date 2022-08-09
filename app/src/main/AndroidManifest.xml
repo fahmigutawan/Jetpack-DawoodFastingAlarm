@@ -3,6 +3,11 @@
     xmlns:tools="http://schemas.android.com/tools"
     package="com.frgutawan.dawoodfastingalarm">
 
+    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
+    <uses-permission android:name="android.permission.USE_FULL_SCREEN_INTENT" />
+
     <application
         android:name=".MyApp"
         android:allowBackup="true"
@@ -25,7 +30,14 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <receiver android:name=".alarmreceiver.DawoodAlarmReceiver"/>
+        <activity
+            android:name=".TurnOffAlarmActivity"
+            android:exported="true"
+            android:label="@string/app_name"
+            android:theme="@style/Theme.DawoodFastingAlarm"/>
+
+        <receiver android:name="com.frgutawan.dawoodfastingalarm.alarm.receiver.DawoodAlarmReceiver" />
+        <service android:name=".alarm.services.DawoodAlarmService" />
     </application>
 
 </manifest>

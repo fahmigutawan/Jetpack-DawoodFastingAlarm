@@ -20,13 +20,11 @@ import com.frgutawan.dawoodfastingalarm.viewmodel.MainViewModel
 import javax.inject.Inject
 
 lateinit var mainViewModel: MainViewModel
-lateinit var alarmMediaPlayer: MediaPlayer
 
 @Composable
 fun AppContent() {
     /**Attrs*/
     mainViewModel = hiltViewModel()
-    alarmMediaPlayer = MediaPlayer()
     val navController = rememberNavController()
 
     /**Content*/

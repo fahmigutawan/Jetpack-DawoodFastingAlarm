@@ -12,6 +12,7 @@ data class DawoodFastingScreenLang(
     val activateDawoodAlarm:String,
     val startFromNextAlarm:String,
     val aboutStartFromNextAlarm:String,
+    val aboutStartFromNextAlarmExit:String,
     val reminderDayBefore:String
 )
 

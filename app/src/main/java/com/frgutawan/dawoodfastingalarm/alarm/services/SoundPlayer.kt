@@ -25,7 +25,7 @@ fun playAlarmSound(context: Context, uri: Uri? = null) {
             start()
         }
 
-        android.os.Handler().postDelayed({ alarmMediaPlayer.stop() }, 5000)
+        //android.os.Handler().postDelayed({ alarmMediaPlayer.stop() }, 5000)
     }
 }
 

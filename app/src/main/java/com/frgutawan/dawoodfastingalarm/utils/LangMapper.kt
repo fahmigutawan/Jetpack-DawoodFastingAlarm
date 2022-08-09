@@ -22,7 +22,8 @@ object LangMapper {
                         "\n\nBy clicking \"Start from Next Alarm\", mean that you command the system " +
                         "to start your alarm schedule by next alarm time dan it will continuously turn on the alarm every two days " +
                         "by its start day.",
-                reminderDayBefore = "Reminder a Day Before"
+                reminderDayBefore = "Reminder a Day Before",
+                aboutStartFromNextAlarmExit = "Close"
             ),
             NormalAlarmScreenLang(
                 normalAlarmTitle = "Normal Alarm"
@@ -47,7 +48,8 @@ object LangMapper {
                         "\n\n Dengan menekan \"Mulai dari Alarm Berikutnya\", berarti bahwa " +
                         "anda memerintahkan sistem untuk menjadwalkan alarm setiap dua hari sekali " +
                         "dimulai dari waktu alarm berikutnya setelah tombol ditekan",
-                reminderDayBefore = "Pengingat Satu Hari Sebelumnya"
+                reminderDayBefore = "Pengingat Satu Hari Sebelumnya",
+                aboutStartFromNextAlarmExit = "Tutup"
             ),
             NormalAlarmScreenLang(
                 normalAlarmTitle = "Alarm Biasa"
