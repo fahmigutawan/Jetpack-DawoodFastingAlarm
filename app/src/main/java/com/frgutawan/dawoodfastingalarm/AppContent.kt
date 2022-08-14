@@ -1,6 +1,5 @@
 package com.frgutawan.dawoodfastingalarm
 
-import android.media.MediaPlayer
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.Scaffold
 import androidx.compose.runtime.Composable
@@ -14,6 +13,7 @@ import com.frgutawan.dawoodfastingalarm.component.AppBottomBar
 import com.frgutawan.dawoodfastingalarm.navigation.MainNavigation
 import com.frgutawan.dawoodfastingalarm.repository.AppRepository
 import com.frgutawan.dawoodfastingalarm.screen.DawoodFastingScreen
+import com.frgutawan.dawoodfastingalarm.screen.NormalAlarmScreen
 import com.frgutawan.dawoodfastingalarm.screen.SettingScreen
 import com.frgutawan.dawoodfastingalarm.screen.SplashScreen
 import com.frgutawan.dawoodfastingalarm.viewmodel.MainViewModel
@@ -68,7 +68,7 @@ private fun AppNavigationHost(modifier: Modifier = Modifier, navController: NavH
         navController = navController,
         startDestination = MainNavigation.SPLASH_SCREEN.name
     ) {
-        /**MAIN SCREEN*/
+        /**[MAIN_SCREEN]*/
         composable(route = MainNavigation.SPLASH_SCREEN.name) {
             mainViewModel.currentNavigation = MainNavigation.SPLASH_SCREEN.name
             SplashScreen(navController = navController)
@@ -81,6 +81,7 @@ private fun AppNavigationHost(modifier: Modifier = Modifier, navController: NavH
 
         composable(route = MainNavigation.NORMAL_ALARM_SCREEN.name) {
             mainViewModel.currentNavigation = MainNavigation.NORMAL_ALARM_SCREEN.name
+            NormalAlarmScreen()
         }
 
         composable(route = MainNavigation.SETTINGS_SCREEN.name) {
@@ -88,6 +89,6 @@ private fun AppNavigationHost(modifier: Modifier = Modifier, navController: NavH
             SettingScreen()
         }
 
-        /**BRANCH SCREEN*/
+        /**[BRANCH_SCREEN]*/
     }
 }

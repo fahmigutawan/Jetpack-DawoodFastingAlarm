@@ -15,6 +15,7 @@ import androidx.compose.foundation.shape.CornerSize
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.DoubleArrow
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.runtime.Composable
@@ -54,6 +55,7 @@ fun DawoodFastingScreen(navController: NavController) {
     //Dialog
     if (viewModel.showAboutStartNextAlarm.value) AboutStartFromNextAlarm(viewModel = viewModel)
     if (viewModel.showCheckPermissionDialog) CheckForPermission(viewModel = viewModel)
+    if (viewModel.showXiaomiDeviceAlert) AlertForXiaomiDevices(viewModel = viewModel)
 }
 
 @Composable
@@ -118,6 +120,7 @@ private fun BelowContent(navController: NavController, viewModel: DawoodFastingS
     viewModel.getIsDawoodFastingAlarmActive()
     viewModel.getIsDawoodFastingReminderActive()
     viewModel.getDawoodFastingAlarmClock()
+    viewModel.getDawoodFastingReminderClock()
 
     /**Content*/
     Box(
@@ -163,19 +166,19 @@ private fun BelowContent(navController: NavController, viewModel: DawoodFastingS
                 )
 
                 // Check if DrawOverOtherApp has granted
-                if (viewModel.isDawoodFastingAlarmActive.value) {
-                    DrawOverOtherApp(
-                        onGranted = {
-                            AnimatedVisibility(visible = viewModel.isDawoodFastingAlarmActive.value) {
+                AnimatedVisibility(visible = viewModel.isDawoodFastingAlarmActive.value) {
+                    if (viewModel.isDawoodFastingAlarmActive.value) {
+                        DrawOverOtherApp(
+                            onGranted = {
                                 DawoodAlarmContent(
                                     navController = navController,
                                     viewModel = viewModel
                                 )
-                            }
-                        },
-                        onDenied = { viewModel.showCheckPermissionDialog = true },
-                        context = context
-                    )
+                            },
+                            onDenied = { viewModel.showCheckPermissionDialog = true },
+                            context = context
+                        )
+                    }
                 }
             }
 
@@ -196,11 +199,38 @@ private fun BelowContent(navController: NavController, viewModel: DawoodFastingS
                             color = LightGreen
                         )
                     },
-                    onCheckedChange = { viewModel.saveIsDawoodFastingReminderActive() },
+                    onCheckedChange = {
+                        viewModel.saveIsDawoodFastingReminderActive()
+                        when (it) {
+                            true -> {
+                                viewModel.setDawoodFastingReminder(
+                                    Integer.parseInt(viewModel.dawoodFastingReminderHour.value),
+                                    Integer.parseInt(viewModel.dawoodFastingReminderMinute.value),
+                                    context
+                                )
+                            }
+                            else -> {
+                                viewModel.cancelDawoodFastingReminder(context)
+                            }
+                        }
+                    },
                     checkedState = viewModel.isDawoodFastingReminderActive
                 )
 
-                AnimatedVisibility(visible = viewModel.isDawoodFastingReminderActive.value) {}
+                AnimatedVisibility(visible = viewModel.isDawoodFastingReminderActive.value) {
+                    if (viewModel.isDawoodFastingReminderActive.value) {
+                        DrawOverOtherApp(
+                            onGranted = {
+                                DawoodReminderContent(
+                                    navController = navController,
+                                    viewModel = viewModel
+                                )
+                            },
+                            onDenied = { viewModel.showCheckPermissionDialog = true },
+                            context = context
+                        )
+                    }
+                }
             }
         }
     }
@@ -284,6 +314,60 @@ private fun DawoodAlarmContent(
 }
 
 @Composable
+private fun DawoodReminderContent(
+    navController: NavController,
+    viewModel: DawoodFastingScreenViewModel
+) {
+    Column {
+        Divider(modifier = Modifier.fillMaxWidth(), color = Gray, thickness = 2.dp)
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            val context = LocalContext.current
+            val timePicker = TimePickerDialog(
+                context,
+                { _, hour: Int, minute: Int ->
+                    if (hour < 10) viewModel.dawoodFastingReminderHour.value = "0$hour"
+                    else viewModel.dawoodFastingReminderHour.value = "$hour"
+
+                    if (minute < 10) viewModel.dawoodFastingReminderMinute.value = "0$minute"
+                    else viewModel.dawoodFastingReminderMinute.value = "$minute"
+
+                    viewModel.cancelDawoodFastingReminder(context)
+                    viewModel.setDawoodFastingReminder(hour, minute, context)
+                    viewModel.saveDawoodFastingReminderClock()
+                },
+                Integer.parseInt(viewModel.dawoodFastingReminderHour.value),
+                Integer.parseInt(viewModel.dawoodFastingReminderMinute.value),
+                true
+            )
+
+            Text(
+                textAlign = TextAlign.Center,
+                modifier = Modifier.clickable(
+                    interactionSource = remember { MutableInteractionSource() },
+                    indication = rememberRipple(color = White),
+                    onClick = { timePicker.show() }),
+                text = "${viewModel.dawoodFastingReminderHour.value}:${viewModel.dawoodFastingReminderMinute.value}",
+                color = White,
+                fontSize = 48.sp,
+                fontFamily = FontFamily(Font(R.font.poppins_semibold))
+            )
+
+            IconButton(onClick = { /*TODO*/ }) {
+                Icon(
+                    imageVector = Icons.Default.Settings,
+                    contentDescription = "Setting",
+                    tint = LightGreen
+                )
+            }
+        }
+    }
+}
+
+@Composable
 private fun AboutStartFromNextAlarm(viewModel: DawoodFastingScreenViewModel) {
     AlertDialog(
         onDismissRequest = { viewModel.showAboutStartNextAlarm.value = false },
@@ -340,7 +424,11 @@ private fun CheckForPermission(viewModel: DawoodFastingScreenViewModel) {
             }
         },
         buttons = {
-            Row(modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp), horizontalArrangement = Arrangement.Center) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 16.dp), horizontalArrangement = Arrangement.Center
+            ) {
                 ButtonField(
                     onClick = {
                         val intent = Intent(
@@ -365,4 +453,159 @@ private fun CheckForPermission(viewModel: DawoodFastingScreenViewModel) {
         backgroundColor = LightGray,
         shape = RoundedCornerShape(CornerSize(4.dp))
     )
+}
+
+@Composable
+private fun AlertForXiaomiDevices(viewModel: DawoodFastingScreenViewModel) {
+    /**Attrs*/
+    val context = LocalContext.current
+    val batteryOptimizatonIntent = Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS)
+    val otherSettingIntent = Intent(
+        Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
+        Uri.parse("package:" + context.getPackageName())
+    )
+
+    /**Content*/
+    AlertDialog(
+        backgroundColor = LightGray,
+        shape = RoundedCornerShape(CornerSize(4.dp)),
+        onDismissRequest = { viewModel.showXiaomiDeviceAlert = false },
+        text = {
+            Column(verticalArrangement = Arrangement.Top) {
+                //Battery Optimization
+                Row(verticalAlignment = Alignment.Top) {
+                    Icon(
+                        imageVector = Icons.Default.DoubleArrow,
+                        contentDescription = "Arrow",
+                        tint = Black
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Column {
+                        Text(
+                            text = "Change you Battery Optimization preferences...",
+                            color = Black,
+                            fontSize = 16.sp,
+                            fontFamily = FontFamily(Font(R.font.poppins_medium))
+                        )
+                        Text(
+                            text = "Make sure that your \"Battery Optimization\" has turned off for this application",
+                            color = Black,
+                            fontSize = 12.sp,
+                            fontFamily = FontFamily(Font(R.font.poppins_regular))
+                        )
+                    }
+                }
+
+                //Spacer
+                Spacer(modifier = Modifier.height(16.dp))
+
+                //Other Setting
+                Row(verticalAlignment = Alignment.Top) {
+                    Icon(
+                        imageVector = Icons.Default.DoubleArrow,
+                        contentDescription = "Arrow",
+                        tint = Black
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Column {
+                        Text(
+                            text = "If you are Xiaomi user...",
+                            color = Black,
+                            fontSize = 16.sp,
+                            fontFamily = FontFamily(Font(R.font.poppins_medium))
+                        )
+
+                        Text(
+                            text = "Make sure you have checked \"Show on Lockscreen\" on your settings",
+                            color = Black,
+                            fontSize = 12.sp,
+                            fontFamily = FontFamily(Font(R.font.poppins_regular))
+                        )
+
+                        Text(
+                            text = "You can change it manually by",
+                            color = Black,
+                            fontSize = 12.sp,
+                            fontFamily = FontFamily(Font(R.font.poppins_regular))
+                        )
+
+                        Spacer(modifier = Modifier.height(8.dp))
+
+                        Column() {
+                            Text(
+                                text = ">> App Configuration",
+                                color = Black,
+                                fontSize = 12.sp,
+                                fontFamily = FontFamily(Font(R.font.poppins_semibold))
+                            )
+
+                            Text(
+                                text = ">> Other Permissions",
+                                color = Black,
+                                fontSize = 12.sp,
+                                fontFamily = FontFamily(Font(R.font.poppins_semibold))
+                            )
+
+                            Text(
+                                text = ">> Show on Lockscreen",
+                                color = Black,
+                                fontSize = 12.sp,
+                                fontFamily = FontFamily(Font(R.font.poppins_semibold))
+                            )
+                        }
+
+                        Spacer(modifier = Modifier.height(8.dp))
+
+                        Text(
+                            text = "Or click button below",
+                            color = Black,
+                            fontSize = 12.sp,
+                            fontFamily = FontFamily(Font(R.font.poppins_regular))
+                        )
+                    }
+                }
+            }
+        },
+        buttons = {
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                /*Battery Optimization*/
+                ButtonField(onClick = { context.startActivity(batteryOptimizatonIntent) }) {
+                    Text(
+                        text = "Go to Battery Optimization Setting",
+                        color = Black,
+                        fontSize = 12.sp,
+                        fontFamily = FontFamily(Font(R.font.poppins_regular))
+                    )
+                }
+                Spacer(modifier = Modifier.height(16.dp))
+
+                /*Other permission*/
+                ButtonField(onClick = { context.startActivity(otherSettingIntent) }) {
+                    Text(
+                        text = "Go to Detail App Setting",
+                        color = Black,
+                        fontSize = 12.sp,
+                        fontFamily = FontFamily(Font(R.font.poppins_regular))
+                    )
+                }
+                Spacer(modifier = Modifier.height(16.dp))
+
+                /*ill do it later*/
+                ButtonField(
+                    onClick = { viewModel.showXiaomiDeviceAlert = false },
+                    color = BlueButton
+                ) {
+                    Text(
+                        text = "Okay",
+                        color = Black,
+                        fontSize = 12.sp,
+                        fontFamily = FontFamily(Font(R.font.poppins_regular))
+                    )
+                }
+                Spacer(modifier = Modifier.height(16.dp))
+            }
+        })
 }

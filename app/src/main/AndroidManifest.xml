@@ -23,6 +23,8 @@
             android:name=".MainActivity"
             android:exported="true"
             android:label="@string/app_name"
+            android:launchMode="singleTop"
+            android:showOnLockScreen="true"
             android:theme="@style/Theme.DawoodFastingAlarm">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -34,6 +36,8 @@
             android:name=".TurnOffAlarmActivity"
             android:exported="true"
             android:label="@string/app_name"
+            android:launchMode="singleTop"
+            android:showOnLockScreen="true"
             android:theme="@style/Theme.DawoodFastingAlarm"/>
 
         <receiver android:name="com.frgutawan.dawoodfastingalarm.alarm.receiver.DawoodAlarmReceiver" />

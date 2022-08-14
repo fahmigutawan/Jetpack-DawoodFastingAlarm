@@ -36,9 +36,19 @@ class AppRepository @Inject constructor(
     // Get DawoodFastingAlarmClock from datastore
     fun getDawoodFastingAlarmClock() = dataStore.dawoodAlarmClock
 
+    // Save DawoodFastingReminder into datastore
+    suspend fun saveDawoodFastingReminderClock(hour:String, minute: String) = dataStore.saveDawoodReminderClock(hour, minute)
+
+    // Get DawoodFastingReminder from datastore
+    fun getDawoodFastingReminderClock() = dataStore.dawoodReminderClock
+
     // Set Dawod Fasting Alarm
     fun setDawoodFastingAlarm(hour:Int, minute:Int, context: Context) = alarmDataSource.setDawoodAlarm(hour, minute, context)
 
     // Cancel Dawood Fasting Alarm
     fun cancelDawoodFastingAlarm(context: Context) = alarmDataSource.cancelDawoodAlarm(context)
+
+    // Set Dawood Fasting Reminder
+
+    // Cancel Dawood Fasting Reminder
 }

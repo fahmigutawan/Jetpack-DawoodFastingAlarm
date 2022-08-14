@@ -29,14 +29,14 @@ class AlarmDataSource @Inject constructor() {
 
         val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
 
-        alarmManager.setAlarmClock(AlarmManager.AlarmClockInfo(cal.timeInMillis, dawoodAlarmPendingIntent), dawoodAlarmPendingIntent)
-//        alarmManager.setInexactRepeating(
-//            AlarmManager.RTC_WAKEUP,
-//            cal.timeInMillis,
-//            2 * 24 * 3600 * 1000,
-//            dawoodAlarmPendingIntent
-//        )
+        alarmManager.setInexactRepeating(
+            AlarmManager.RTC_WAKEUP,
+            cal.timeInMillis,
+            2 * 24 * 3600 * 1000,
+            dawoodAlarmPendingIntent
+        )
     }
+
     fun cancelDawoodAlarm(context: Context) {
         val dawoodAlarmIntent = Intent(context, DawoodAlarmReceiver::class.java)
         val dawoodAlarmPendingIntent = PendingIntent.getBroadcast(context, 0, dawoodAlarmIntent, 0)

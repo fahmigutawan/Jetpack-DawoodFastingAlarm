@@ -8,6 +8,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.frgutawan.dawoodfastingalarm.repository.AppRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -18,8 +19,11 @@ class DawoodFastingScreenViewModel @Inject constructor(private val repository: A
     val isDawoodFastingReminderActive = mutableStateOf(false)
     val dawoodFastingAlarmClockHour = mutableStateOf("00")
     val dawoodFastingAlarmClockMinute = mutableStateOf("00")
+    val dawoodFastingReminderHour = mutableStateOf("00")
+    val dawoodFastingReminderMinute = mutableStateOf("00")
     var showAboutStartNextAlarm = mutableStateOf(false)
     var showCheckPermissionDialog by mutableStateOf(false)
+    var showXiaomiDeviceAlert by mutableStateOf(true)
 
     /**[GetterSetter]*/
     fun getIsDawoodFastingAlarmActive() {
@@ -67,6 +71,24 @@ class DawoodFastingScreenViewModel @Inject constructor(private val repository: A
             )
         }
     }
+
+    fun getDawoodFastingReminderClock() {
+        viewModelScope.launch {
+            repository.getDawoodFastingReminderClock().collect {
+                dawoodFastingReminderHour.value = it.hour
+                dawoodFastingReminderMinute.value = it.minute
+            }
+        }
+    }
+
+    fun saveDawoodFastingReminderClock() {
+        viewModelScope.launch {
+            repository.saveDawoodFastingReminderClock(
+                dawoodFastingReminderHour.value,
+                dawoodFastingReminderMinute.value
+            )
+        }
+    }
     /**[END]*/
 
     /***/
@@ -74,4 +96,8 @@ class DawoodFastingScreenViewModel @Inject constructor(private val repository: A
         repository.setDawoodFastingAlarm(hour, minute, context)
 
     fun cancelDawoodFastingAlarm(context: Context) = repository.cancelDawoodFastingAlarm(context)
+
+    fun setDawoodFastingReminder(hour: Int, minute: Int, context: Context) {}
+
+    fun cancelDawoodFastingReminder(context: Context) {}
 }

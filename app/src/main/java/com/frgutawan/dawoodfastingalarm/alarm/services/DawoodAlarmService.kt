@@ -12,6 +12,7 @@ import android.os.IBinder
 import androidx.core.app.NotificationCompat
 import com.frgutawan.dawoodfastingalarm.R
 import com.frgutawan.dawoodfastingalarm.TurnOffAlarmActivity
+import com.frgutawan.dawoodfastingalarm.utils.playAlarmSound
 
 class DawoodAlarmService : Service() {
     override fun onCreate() {
@@ -41,7 +42,9 @@ class DawoodAlarmService : Service() {
             setContentTitle("Title")
             setContentText("Text")
             setSmallIcon(R.drawable.ic_botmenu_mosque)
-            setContentIntent(pendingIntentActivity)
+            setPriority(NotificationCompat.PRIORITY_HIGH)
+            setFullScreenIntent(pendingIntentActivity, true)
+            setCategory(NotificationCompat.CATEGORY_ALARM)
         }
 
         notificationManager.notify(100, builder.build())
@@ -49,11 +52,9 @@ class DawoodAlarmService : Service() {
 
         intentActivity.flags = Intent.FLAG_ACTIVITY_NEW_TASK
         startActivity(intentActivity)
-
-        Handler().postDelayed({notificationManager.cancel(100)}, 5000)
     }
 
-    override fun onBind(p0: Intent?): IBinder? {
+    override fun onBind(p0: Intent): IBinder? {
         return null
     }
 }
